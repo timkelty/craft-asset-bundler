@@ -1,6 +1,5 @@
 <?php namespace fortrabbit\AssetBundler;
 
-
 use yii\base\Behavior;
 
 class RevisionableResourceBehavior extends Behavior
@@ -29,7 +28,7 @@ class RevisionableResourceBehavior extends Behavior
         }
 
         // New
-        if ($rev = $this->writeRevisionToFile(time())) {
+        if ($rev = $this->writeRevisionToFile($this->getDeployDate())) {
             return $rev;
         }
     }
@@ -77,7 +76,6 @@ class RevisionableResourceBehavior extends Behavior
 
         // Rename revision folder
         return rename($oldRevPath, $this->getRevisionResourcePath());
-
     }
 
     /**
@@ -105,15 +103,19 @@ class RevisionableResourceBehavior extends Behavior
             if ($fileinfo->isFile()) {
                 $mtime = $fileinfo->getMTime();
                 if ($mtime > $recent) {
-                    $recent = $fileinfo->getMTime();
+                    $recent = $this->getDeployDate();
                 }
                 if ($mtime > $this->revision) {
                     $this->modifiedFiles[] = str_replace($this->getRevisionResourcePath(), '', $fileinfo->getPathname());
                 }
-
             }
         }
 
         return $recent;
+    }
+
+    protected function getDeployDate()
+    {
+        return strtotime(explode('-', getenv('GITREF'))[1]);
     }
 }
